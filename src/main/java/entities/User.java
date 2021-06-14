@@ -1,15 +1,17 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.persistence.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "users")
 public class User implements Serializable {
@@ -22,17 +24,18 @@ public class User implements Serializable {
 
     @Column(unique = true)
     private String username;
+    private String displayName;
 
     private String password;
 
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(name = "user_roles",
-            joinColumns = { @JoinColumn(name = "fk_user_id") },
-            inverseJoinColumns = { @JoinColumn(name = "fk_role") })
+            joinColumns = {@JoinColumn(name = "fk_user_id")},
+            inverseJoinColumns = {@JoinColumn(name = "fk_role")})
     private Set<Role> roles = new HashSet<>();
 
-    public User() {
-    }
+    private Date createdAt;
+    private Date updatedAt;
 
     public User(String username, String password) {
         this.username = username;
@@ -43,22 +46,6 @@ public class User implements Serializable {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = generateHashedPassword(password);
     }
@@ -67,13 +54,6 @@ public class User implements Serializable {
         return BCrypt.checkpw(password, this.password);
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
 
     public void addRole(Role role) {
         roles.add(role);
@@ -85,5 +65,15 @@ public class User implements Serializable {
 
     public List<String> getRolesAsStrings() {
         return roles.isEmpty() ? null : roles.stream().map(Object::toString).collect(Collectors.toList());
+    }
+
+    @PrePersist
+    private void onCreate() {
+        this.createdAt = new Date();
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        this.updatedAt = new Date();
     }
 }

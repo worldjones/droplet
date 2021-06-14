@@ -3,6 +3,7 @@ package security;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -10,60 +11,76 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import dtos.user.PrivateUserDto;
 import facades.UserFacade;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import entities.User;
-import errorhandling.API_Exception;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import security.errorhandling.AuthenticationException;
-import errorhandling.GenericExceptionMapper;
+
 import javax.persistence.EntityManagerFactory;
 import utils.EMF_Creator;
 
-@Path("login")
-public class LoginEndpoint {
+@Path("authentication")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class AuthenticationEndpoint {
 
     public static final int TOKEN_EXPIRE_TIME = 1000 * 60 * 30; //30 min
     private static final EntityManagerFactory EMF = EMF_Creator.createEntityManagerFactory();
-    public static final UserFacade USER_FACADE = UserFacade.getUserFacade(EMF);
+    public static final UserFacade USER_FACADE = UserFacade.getInstance(EMF);
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response login(String jsonString) throws AuthenticationException, API_Exception {
-        String username;
-        String password;
+    @Path("login")
+    public Response login(String jsonString) {
         try {
             JsonObject json = JsonParser.parseString(jsonString).getAsJsonObject();
-            username = json.get("username").getAsString();
-            password = json.get("password").getAsString();
-        } catch (Exception e) {
-           throw new API_Exception("Malformed JSON Suplied",400,e);
-        }
+            String username = json.get("username").getAsString();
+            String password = json.get("password").getAsString();
 
+            PrivateUserDto user = USER_FACADE.login(username, password);
+
+            return createLoginResponse(user);
+        } catch (JsonSyntaxException e) {
+           throw new WebApplicationException("Bad request, expected: username, password", 400);
+        } catch (AuthenticationException e) {
+          throw new WebApplicationException("Username and password do not match.", 401);
+        }
+    }
+
+    @POST
+    @Path("register")
+    public Response register(String jsonString) {
         try {
-            User user = USER_FACADE.getVerifiedUser(username, password);
-            String token = createToken(username, user.getRolesAsStrings());
+            JsonObject json = JsonParser.parseString(jsonString).getAsJsonObject();
+            String username = json.get("username").getAsString();
+            String password = json.get("password").getAsString();
+            String passwordConfirm = json.get("passwordConfirm").getAsString();
+
+            PrivateUserDto user = USER_FACADE.register(username, password, passwordConfirm);
+
+            return createLoginResponse(user);
+        } catch (JsonSyntaxException e) {
+            throw new WebApplicationException("Bad request, expected: username, password, passwordConfirm", 400);
+        }
+    }
+
+
+    private Response createLoginResponse(PrivateUserDto user) {
+        try {
+            String token = createToken(user.getUsername(), user.getRolesAsStrings());
             JsonObject responseJson = new JsonObject();
-            responseJson.addProperty("username", username);
+            responseJson.addProperty("username", user.getUsername());
             responseJson.addProperty("token", token);
             return Response.ok(new Gson().toJson(responseJson)).build();
-
-        } catch (JOSEException | AuthenticationException ex) {
-            if (ex instanceof AuthenticationException) {
-                throw (AuthenticationException) ex;
-            }
-            Logger.getLogger(GenericExceptionMapper.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JOSEException ex) {
+            throw new WebApplicationException("User could not be authorized.", 401);
         }
-        throw new AuthenticationException("Invalid username or password! Please try again");
     }
 
     private String createToken(String userName, List<String> roles) throws JOSEException {

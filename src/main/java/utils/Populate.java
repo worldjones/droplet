@@ -4,10 +4,8 @@ package utils;
 import com.google.common.base.Strings;
 import facades.UserFacade;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,9 +35,9 @@ public class Populate {
      *
      * */
     public boolean populateUsers() throws IllegalArgumentException {
-        UserFacade userFacade = UserFacade.getUserFacade(this.emf);
+        UserFacade userFacade = UserFacade.getInstance(this.emf);
 
-        if (!userFacade.getUsers().isEmpty()) return false;
+        if (!userFacade.getAllPrivate().isEmpty()) return false;
 
         // NOTICE: Always set your password as environment variables.
         String password_admin = "test";
@@ -55,8 +53,8 @@ public class Populate {
                 throw new IllegalArgumentException("FAILED POPULATE OF USERS: Passwords were empty or less than 3 characters? Are environment variables: [PASSWORD_DEFAULT_USER, PASSWORD_DEFAULT_ADMIN] set?");
         }
 
-        userFacade.create("user", password_user, new ArrayList<>());
-        userFacade.create("admin", password_admin, Collections.singletonList("admin"));
+        userFacade._create("user", password_user, new ArrayList<>());
+        userFacade._create("admin", password_admin, Collections.singletonList("admin"));
 
         return true;
     }

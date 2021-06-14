@@ -1,29 +1,30 @@
 package rest;
 
-import entities.User;
-import entities.Role;
-
+import com.google.gson.Gson;
+import dtos.user.PrivateUserDto;
 import io.restassured.RestAssured;
-import static io.restassured.RestAssured.given;
 import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
-import java.net.URI;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.ws.rs.core.UriBuilder;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import static org.hamcrest.Matchers.equalTo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import utils.EMF_Creator;
 import utils.Populate;
 
-public class LoginEndpointTest {
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+
+public class AdminResourceTest {
 
     private static final int SERVER_PORT = 7777;
     private static final String SERVER_URL = "http://localhost/api";
@@ -80,14 +81,15 @@ public class LoginEndpointTest {
     private static String securityToken;
 
     //Utility method to login and set the returned securityToken
-    private static void login(String role, String password) {
-        String json = String.format("{username: \"%s\", password: \"%s\"}", role, password);
+    private static void login(String username, String password) {
+        String json = String.format("{username: \"%s\", password: \"%s\"}", username, password);
         securityToken = given()
                 .contentType("application/json")
                 .body(json)
                 //.when().post("/api/login")
-                .when().post("/login")
+                .when().post("/authentication/login")
                 .then()
+                .statusCode(200)
                 .extract().path("token");
         //System.out.println("TOKEN ---> " + securityToken);
     }
@@ -97,103 +99,32 @@ public class LoginEndpointTest {
     }
 
     @Test
-    public void serverIsRunning() {
-        given().when().get("/info").then().statusCode(200);
-    }
-
-    @Test
-    public void testRestNoAuthenticationRequired() {
-        given()
-                .contentType("application/json")
-                .when()
-                .get("/info/").then()
-                .statusCode(200)
-                .body("msg", equalTo("Hello anonymous"));
-    }
-
-    @Test
-    public void testRestForAdmin() {
-        login("admin", "test");
-        given()
-                .contentType("application/json")
-                .accept(ContentType.JSON)
-                .header("x-access-token", securityToken)
-                .when()
-                .get("/info/admin").then()
-                .statusCode(200)
-                .body("msg", equalTo("Hello to (admin) User: admin"));
-    }
-
-    @Test
-    public void testRestForUser() {
+    public void noAccess() {
         login("user", "test");
         given()
                 .contentType("application/json")
                 .header("x-access-token", securityToken)
                 .when()
-                .get("/info/user").then()
-                .statusCode(200)
-                .body("msg", equalTo("Hello to User: user"));
-    }
+                .get("/admin/users").then()
+                .statusCode(401);
 
-    @Test
-    public void testAutorizedUserCannotAccesAdminPage() {
-        login("user", "test");
         given()
                 .contentType("application/json")
-                .header("x-access-token", securityToken)
                 .when()
-                .get("/info/admin").then() //Call Admin endpoint as user
+                .get("/admin/users").then()
                 .statusCode(401);
     }
 
     @Test
-    public void testRestForMultiRole1() {
-        login("admin", "test");
-        given()
-                .contentType("application/json")
-                .accept(ContentType.JSON)
-                .header("x-access-token", securityToken)
-                .when()
-                .get("/info/admin").then()
-                .statusCode(200)
-                .body("msg", equalTo("Hello to (admin) User: admin"));
-    }
-
-    @Test
-    public void testRestForMultiRole2() {
+    public void users() {
         login("admin", "test");
         given()
                 .contentType("application/json")
                 .header("x-access-token", securityToken)
                 .when()
-                .get("/info/user").then()
+                .get("/admin/users").then()
                 .statusCode(200)
-                .body("msg", equalTo("Hello to User: admin"));
-    }
-
-    @Test
-    public void userNotAuthenticated() {
-        logOut();
-        given()
-                .contentType("application/json")
-                .when()
-                .get("/info/user").then()
-                .statusCode(403)
-                .body("code", equalTo(403))
-                .body("message", equalTo("Not authenticated - do login"));
-    }
-
-    @Test
-    public void adminNotAuthenticated() {
-        logOut();
-        given()
-                .contentType("application/json")
-                .when()
-                .get("/info/user").then()
-                .statusCode(403)
-                .body("code", equalTo(403))
-                .body("message", equalTo("Not authenticated - do login"));
+                .body("", hasSize(2));
     }
 
 }

@@ -16,7 +16,7 @@ public class RenameMeResource {
 
     private static final EntityManagerFactory EMF = EMF_Creator.createEntityManagerFactory();
        
-    private static final FacadeExample FACADE =  FacadeExample.getFacadeExample(EMF);
+    private static final FacadeExample FACADE =  FacadeExample.getInstance(EMF);
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
             
     @GET

@@ -1,6 +1,8 @@
 package entities;
 
 import com.google.common.collect.ImmutableList;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -8,10 +10,8 @@ import java.util.Objects;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
-/**
- *
- * @author Plaul
- */
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "roles")
 public class Role implements Serializable {
@@ -33,27 +33,8 @@ public class Role implements Serializable {
     @ManyToMany(mappedBy = "roles")
     private List<User> users;
 
-    public Role() {
-    }
-
     public Role(String role) {
         this.name = role;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String role) {
-        this.name = role;
-    }
-
-    public List<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(List<User> userList) {
-        this.users = userList;
     }
 
     @Override
