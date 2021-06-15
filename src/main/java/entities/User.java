@@ -25,6 +25,9 @@ public class User implements Serializable {
     @Column(unique = true)
     private String username;
     private String displayName;
+    private String email;
+    private int phone;
+    private double billingPrHour;
 
     private String password;
 
@@ -32,14 +35,28 @@ public class User implements Serializable {
     @JoinTable(name = "user_roles",
             joinColumns = {@JoinColumn(name = "fk_user_id")},
             inverseJoinColumns = {@JoinColumn(name = "fk_role")})
+    
     private Set<Role> roles = new HashSet<>();
-
+    
     private Date createdAt;
     private Date updatedAt;
+    
+    
+    
+    @ManyToMany(cascade = CascadeType.PERSIST)
+    private List<Project> projects;
+    
+    @OneToMany(cascade = CascadeType.PERSIST)
+    private List<ProjectHours> projectHours;
 
-    public User(String username, String password) {
+    public User(String username, String password, String email, int phone, double billingPrHour) {
         this.username = username;
         this.password = generateHashedPassword(password);
+        this.email = email;
+        this.phone = phone;
+        this.billingPrHour = billingPrHour;
+        this.projects = new ArrayList<>();
+        this.projectHours = new ArrayList<>();
     }
 
     private String generateHashedPassword(String password) {
@@ -52,6 +69,12 @@ public class User implements Serializable {
 
     public boolean verifyPassword(String password) {
         return BCrypt.checkpw(password, this.password);
+    }
+
+    public void addProject(Project project){
+        this.projects.add(project);
+        project.getUsers().add(this);
+        
     }
 
 
@@ -76,4 +99,6 @@ public class User implements Serializable {
     private void onUpdate() {
         this.updatedAt = new Date();
     }
+
+ 
 }
