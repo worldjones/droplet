@@ -22,6 +22,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 
+/*
+
 public class UtilityResourceTest {
 
     private static final int SERVER_PORT = 7777;
@@ -86,3 +88,4 @@ public class UtilityResourceTest {
 
 
 }
+*/

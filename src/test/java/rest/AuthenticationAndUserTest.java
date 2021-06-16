@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import utils.EMF_Creator;
 import utils.Populate;
 
+/*
+
 public class AuthenticationAndUserTest {
 
     private static final int SERVER_PORT = 7777;
@@ -337,3 +339,4 @@ public class AuthenticationAndUserTest {
     }
 
 }
+*/

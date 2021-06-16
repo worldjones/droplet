@@ -24,6 +24,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+
+/*
 public class AdminResourceTest {
 
     private static final int SERVER_PORT = 7777;
@@ -128,3 +130,4 @@ public class AdminResourceTest {
     }
 
 }
+*/
