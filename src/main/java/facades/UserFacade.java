@@ -44,7 +44,7 @@ public class UserFacade {
         // Validation...
         List<String> validationErrors = new ArrayList<>();
 
-        if(_get(username) != null)
+        if(getUser(username) != null)
             validationErrors.add("A user with this username already exists.");
         if(!password.equals(passwordConfirm))
             validationErrors.add("The passwords entered do not match.");
@@ -55,7 +55,7 @@ public class UserFacade {
     }
 
     public PrivateUserDto login(String username, String password) throws AuthenticationException {
-        User user = _get(username);
+        User user = getUser(username);
 
         if (user == null || !user.verifyPassword(password)) {
             throw new AuthenticationException("Invalid user name or password");
@@ -68,7 +68,7 @@ public class UserFacade {
 
         try {
             // Replace all accessible entries for our user.
-            User user = _get(updatedUser.getUsername());
+            User user = getUser(updatedUser.getUsername());
             if (user == null)
                 throw new WebApplicationException("Unknown user (" + updatedUser.getUsername() + ") requested.", 404);
 
@@ -94,14 +94,14 @@ public class UserFacade {
     }
 
     public PrivateUserDto getPrivate(String username) {
-        User user = _get(username);
+        User user = getUser(username);
         if(user == null)
             throw new WebApplicationException("Unknown user (" + username + ") requested.", 404);
 
         return new PrivateUserDto(user);
     }
 
-    public List<PrivateUserDto> getAllPrivate() {
+    public List<PrivateUserDto> getUsers() {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<User> q = em.createQuery("SELECT u FROM User u", User.class);
@@ -119,7 +119,7 @@ public class UserFacade {
      *
      * */
 
-    public User _get(String username) {
+    public User getUser(String username) {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<User> q = em.createQuery("SELECT u from User u WHERE u.username = :username", User.class);
@@ -180,4 +180,17 @@ public class UserFacade {
             em.close();
         }
     }
+        
+        public void addUser(String username, String password, String email, int phone, double billingPrHour){
+        EntityManager em = emf.createEntityManager();
+        try{
+            User user = new User(username, password, email, phone, billingPrHour);
+            em.getTransaction().begin();
+            em.persist(user);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+    }
+    
 }

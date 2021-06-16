@@ -75,4 +75,29 @@ public class ProjectFacade {
         }
     }
     
+    
+    
+    //but what doing ......
+    
+    public void addUser(String projectId, String userId){
+        EntityManager em = emf.createEntityManager();
+
+        Project project = em.find(Project.class,projectId);
+        User user = em.find(User.class, userId);
+        
+        if(project.getUsers().contains(user )){
+            em.close();
+        }
+
+        try{
+            em.getTransaction().begin();
+            project.addUser(user);
+            em.merge(project);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+
+    }
+    
 }

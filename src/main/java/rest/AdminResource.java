@@ -34,7 +34,7 @@ public class AdminResource {
     @GET
     @Path("/users")
     public Response getUsers() {
-        List<PrivateUserDto> users = USER_FACADE.getAllPrivate();
+        List<PrivateUserDto> users = USER_FACADE.getUsers();
         return Response.ok().entity(GSON.toJson(users)).build();
     }
 

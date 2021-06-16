@@ -14,7 +14,6 @@ import org.mindrot.jbcrypt.BCrypt;
 @Data
 @NoArgsConstructor
 @Entity
-@Table(name = "projects")
 public class ProjectHours implements Serializable {
 
     private static final long serialVersionUID = 1L;

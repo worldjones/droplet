@@ -2,6 +2,7 @@ package utils;
 
 
 import com.google.common.base.Strings;
+import facades.ProjectFacade;
 import facades.UserFacade;
 
 import javax.persistence.EntityManagerFactory;
@@ -25,6 +26,8 @@ public class Populate {
         List<String> populated = new ArrayList<>();
         if(populateUsers())
             populated.add("users");
+        if(populateProjects())
+            populated.add("projects");
 
         return populated;
     }
@@ -37,7 +40,7 @@ public class Populate {
     public boolean populateUsers() throws IllegalArgumentException {
         UserFacade userFacade = UserFacade.getInstance(this.emf);
 
-        if (!userFacade.getAllPrivate().isEmpty()) return false;
+        if (!userFacade.getUsers().isEmpty()) return false;
 
         // NOTICE: Always set your password as environment variables.
         String password_admin = "test";
@@ -56,7 +59,26 @@ public class Populate {
         userFacade._create("user", password_user, new ArrayList<>());
         userFacade._create("admin", password_admin, Collections.singletonList("admin"));
 
+        userFacade.addUser("worldjones", "cph51738", "worldjones@gmail.com", 87654321, 500);
+        userFacade.addUser("worldjones", "password", "test@gmail.com", 12345678, 800);
+        
+        
+        return true;
+        
+    }
+        
+        
+     public boolean populateProjects() throws IllegalArgumentException{
+        ProjectFacade projectFacade = ProjectFacade.getProjectFacade(this.emf);
+
+        if(!projectFacade.getProjects().isEmpty()) return false;
+
+        projectFacade.addProject("First project", "Number 1");
+        projectFacade.addProject("Seconds project", "Number 2");
+
         return true;
     }
+        
+    
 
 }

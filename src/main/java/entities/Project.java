@@ -40,8 +40,17 @@ public class Project implements Serializable {
         this.projectHours = new ArrayList<>();
     }
     
+
+    public User addUser(User user) {
+        this.users.add(user);
+        return user;
+    }
+
+    public List<ProjectHours> getProjectHours() {
+        return projectHours;
    
     
     
     
+}
 }

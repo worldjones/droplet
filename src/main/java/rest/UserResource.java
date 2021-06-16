@@ -9,6 +9,7 @@ import utils.EMF_Creator;
 import javax.annotation.security.RolesAllowed;
 import javax.persistence.EntityManagerFactory;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -25,20 +26,20 @@ public class UserResource {
     SecurityContext securityContext;
 
     private static final EntityManagerFactory EMF = EMF_Creator.createEntityManagerFactory();
-    private static final UserFacade USER_FACADE = UserFacade.getInstance(EMF);
+    private static final UserFacade FACADE = UserFacade.getInstance(EMF);
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public UserResource() {}
 
-    @PUT
-    @RolesAllowed("user")
-    public Response updateUser(String json) {
-        PrivateUserDto updatedUser = GSON.fromJson(json, PrivateUserDto.class);
-        // Ensure that we only update our signed in user.
-        updatedUser.setUsername(securityContext.getUserPrincipal().getName());
+    @GET
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("all")
+    public Response getAllUsers(){
+        return Response.ok(GSON.toJson(FACADE.getUsers())).build();
+    }
 
-        updatedUser = USER_FACADE.updateUser(updatedUser);
-        return Response.ok(GSON.toJson(updatedUser)).build();
+    @GET
+    public String serverIsUp() {
+        return "{\"msg\":\"Working\"}";
     }
 }
